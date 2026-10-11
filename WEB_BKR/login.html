@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entrar — Brooklyn Roleplay</title>
+  <meta name="description" content="Entre na sua conta do Brooklyn Roleplay usando o Discord e garanta sua whitelist." />
+  <meta name="robots" content="noindex" />
+
+  <link rel="icon" type="image/png" href="main/files/images/logo.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
+
+  <script>document.documentElement.classList.add('js');</script>
+
+  <style>
+    /* =======================================================
+       BROOKLYN ROLEPLAY — LOGIN
+       ======================================================= */
+
+    :root {
+      --bg:            #08080a;
+      --bg-2:          #0b0b0e;
+      --surface:       rgba(255, 255, 255, 0.035);
+      --surface-2:     rgba(255, 255, 255, 0.055);
+      --surface-3:     rgba(255, 255, 255, 0.08);
+
+      --border:        rgba(255, 255, 255, 0.09);
+      --border-strong: rgba(255, 255, 255, 0.16);
+
+      --yellow:        #ffd500;
+      --yellow-soft:   rgba(255, 213, 0, 0.14);
+      --yellow-glow:   rgba(255, 213, 0, 0.28);
+
+      --green:         #22c55e;
+      --green-glow:    rgba(34, 197, 94, 0.4);
+
+      --red:           #e63946;
+      --red-soft:      rgba(230, 57, 70, 0.14);
+
+      --discord:       #5865f2;
+      --discord-hover: #4752c4;
+      --discord-glow:  rgba(88, 101, 242, 0.4);
+
+      --text:          #f4f4f6;
+      --text-dim:      #a3a3ae;
+      --text-mute:     #65656f;
+
+      --font-display:  'Anton', 'Arial Narrow', sans-serif;
+      --font-body:     'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono:     'JetBrains Mono', ui-monospace, monospace;
+
+      --container:     1240px;
+      --ease:          cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    * { margin: 0; padding: 0; }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      font-size: 16px;
+      overflow-x: hidden;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    img, svg { display: block; max-width: 100%; }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; cursor: pointer; background: none; border: none; color: inherit; }
+
+    ::selection { background: var(--yellow); color: #000; }
+
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb {
+      background: #1c1c22;
+      border: 2px solid var(--bg);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: #2a2a32; }
+
+    .container {
+      width: 100%;
+      max-width: var(--container);
+      margin: 0 auto;
+      padding: 0 28px;
+    }
+
+    .bg-image {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image: url('main/files/images/background.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0.15;
+      filter: grayscale(30%) brightness(0.6);
+    }
+
+    .grain {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.035;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    }
+
+    .glow {
+      position: fixed;
+      z-index: 0;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(140px);
+    }
+    .glow--1 {
+      width: 640px; height: 640px;
+      top: -260px; left: -180px;
+      background: radial-gradient(circle, rgba(255, 213, 0, 0.22), transparent 65%);
+      animation: glowDrift 22s ease-in-out infinite;
+    }
+    .glow--2 {
+      width: 560px; height: 560px;
+      bottom: -220px; right: -180px;
+      background: radial-gradient(circle, rgba(88, 101, 242, 0.18), transparent 65%);
+      animation: glowDrift 26s ease-in-out infinite reverse;
+    }
+    @keyframes glowDrift {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50%      { transform: translate(40px, -30px) scale(1.08); }
+    }
+
+    /* =======================================================
+       LAYOUT
+       ======================================================= */
+    .page {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr;
+      min-height: 100vh;
+    }
+
+    .back {
+      position: absolute;
+      top: 28px;
+      left: 28px;
+      z-index: 10;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-dim);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: color 0.25s, border-color 0.25s, gap 0.3s var(--ease), transform 0.3s var(--ease);
+    }
+    .back svg { width: 14px; height: 14px; }
+    .back:hover {
+      color: var(--yellow);
+      border-color: rgba(255, 213, 0, 0.4);
+      gap: 10px;
+      transform: translateX(-2px);
+    }
+
+    .login {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 100vh;
+      align-items: stretch;
+    }
+
+    .login__side {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 80px 60px 60px;
+      border-right: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .login__side::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(255, 213, 0, 0.10), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(255, 213, 0, 0.06), transparent 60%);
+      pointer-events: none;
+    }
+
+    .side__brand {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+      margin-top: 40px;
+    }
+
+    .side__logo-wrap {
+      position: relative;
+      width: clamp(120px, 14vw, 170px);
+      height: clamp(120px, 14vw, 170px);
+      display: grid;
+      place-items: center;
+      border-radius: 28px;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(255, 213, 0, 0.14), transparent 60%),
+        var(--surface-2);
+      border: 1px solid var(--border-strong);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow:
+        0 0 80px -30px var(--yellow-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+    .side__logo-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 28px;
+      padding: 1px;
+      background: linear-gradient(160deg, rgba(255, 213, 0, 0.5), transparent 40%, transparent 60%, rgba(255, 213, 0, 0.15));
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .side__logo {
+      width: 76%;
+      height: 76%;
+      object-fit: contain;
+      filter: drop-shadow(0 0 30px rgba(255, 213, 0, 0.4));
+      animation: logoFloat 6s ease-in-out infinite;
+    }
+    @keyframes logoFloat {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+
+    .side__title {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: clamp(2.8rem, 6vw, 5.4rem);
+      line-height: 0.88;
+      letter-spacing: 0.005em;
+      text-transform: uppercase;
+    }
+    .side__title span { display: block; overflow: hidden; }
+    .side__title span > span { display: inline-block; }
+    .side__title-alt > span {
+      color: transparent;
+      -webkit-text-stroke: 2px var(--yellow);
+    }
+
+    .side__text {
+      position: relative;
+      max-width: 420px;
+      font-size: 0.98rem;
+      line-height: 1.65;
+      color: var(--text-dim);
+    }
+    .side__text strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .side__whitelist {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 26px;
+      padding: 14px 18px;
+      background: linear-gradient(135deg, rgba(255, 213, 0, 0.08), rgba(255, 213, 0, 0.02));
+      border: 1px solid rgba(255, 213, 0, 0.3);
+      border-radius: 16px;
+      max-width: 420px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 20px 50px -30px var(--yellow-glow);
+    }
+
+    .side__whitelist-icon {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      border-radius: 12px;
+      background: var(--yellow);
+      color: #000;
+      box-shadow: 0 0 22px -4px var(--yellow-glow);
+    }
+    .side__whitelist-icon svg { width: 20px; height: 20px; }
+
+    .side__whitelist-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .side__whitelist-text strong {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 1.05rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--yellow);
+      line-height: 1.1;
+    }
+    .side__whitelist-text span {
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: var(--text-dim);
+    }
+
+    .side__foot {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+    }
+    .side__foot::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .login__main {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 60px 60px;
+      position: relative;
+    }
+
+    .login__card {
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+    }
+
+    .whitelist-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      margin-bottom: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #000;
+      background: var(--yellow);
+      border-radius: 999px;
+      box-shadow:
+        0 0 0 1px rgba(255, 213, 0, 0.4),
+        0 8px 22px -8px var(--yellow-glow);
+      position: relative;
+      overflow: hidden;
+    }
+    .whitelist-badge::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%);
+      transform: translateX(-100%);
+      animation: shine 3s ease-in-out infinite;
+    }
+    @keyframes shine {
+      0%, 60% { transform: translateX(-100%); }
+      100%    { transform: translateX(100%); }
+    }
+    .whitelist-badge svg {
+      width: 13px;
+      height: 13px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .whitelist-badge span { position: relative; z-index: 1; }
+
+    .login__title {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+      line-height: 1;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .login__title em {
+      font-style: normal;
+      color: var(--yellow);
+    }
+
+    .login__sub {
+      font-size: 0.94rem;
+      line-height: 1.6;
+      color: var(--text-dim);
+      margin-bottom: 28px;
+    }
+
+    /* Botão Discord */
+    .discord-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 16px 24px;
+      font-size: 0.98rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      color: #fff;
+      background: var(--discord);
+      border-radius: 14px;
+      transition: background 0.25s, transform 0.25s var(--ease), box-shadow 0.3s, opacity 0.25s;
+      box-shadow:
+        0 8px 24px -10px var(--discord-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      position: relative;
+      overflow: hidden;
+    }
+    .discord-btn:hover {
+      background: var(--discord-hover);
+      transform: translateY(-2px);
+      box-shadow:
+        0 14px 36px -10px var(--discord-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+    .discord-btn:active { transform: translateY(0); }
+    .discord-btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .discord-btn svg {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .discord-btn .btn-spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spinBtn 0.7s linear infinite;
+      display: none;
+    }
+    .discord-btn.is-loading .btn-spinner { display: block; }
+    .discord-btn.is-loading .btn-icon { display: none; }
+    @keyframes spinBtn { to { transform: rotate(360deg); } }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 24px 0;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+    }
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .wl-benefits {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .wl-benefit {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 13px 15px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: border-color 0.3s, background 0.3s, transform 0.3s var(--ease);
+    }
+    .wl-benefit:hover {
+      border-color: rgba(255, 213, 0, 0.3);
+      background: var(--surface-2);
+      transform: translateX(3px);
+    }
+
+    .wl-benefit__check {
+      display: grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      border-radius: 7px;
+      background: rgba(255, 213, 0, 0.12);
+      border: 1px solid rgba(255, 213, 0, 0.3);
+      color: var(--yellow);
+    }
+    .wl-benefit__check svg { width: 12px; height: 12px; }
+
+    .wl-benefit__text {
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--text-dim);
+    }
+    .wl-benefit__text strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .login__error {
+      display: none;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: var(--red-soft);
+      border: 1px solid rgba(230, 57, 70, 0.35);
+      font-size: 0.82rem;
+      line-height: 1.55;
+      color: var(--text-dim);
+    }
+    .login__error.is-visible { display: flex; }
+    .login__error svg {
+      width: 16px; height: 16px;
+      flex-shrink: 0; margin-top: 2px;
+      color: var(--red);
+    }
+
+    .login__note {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(255, 213, 0, 0.05);
+      border: 1px solid rgba(255, 213, 0, 0.18);
+      font-size: 0.8rem;
+      line-height: 1.55;
+      color: var(--text-dim);
+    }
+    .login__note svg {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: var(--yellow);
+    }
+    .login__note strong { color: var(--yellow); font-weight: 500; }
+
+    .login__terms {
+      margin-top: 20px;
+      font-size: 0.76rem;
+      line-height: 1.55;
+      color: var(--text-mute);
+      text-align: center;
+    }
+    .login__terms a {
+      color: var(--text-dim);
+      border-bottom: 1px solid transparent;
+      transition: color 0.25s, border-color 0.25s;
+    }
+    .login__terms a:hover {
+      color: var(--yellow);
+      border-bottom-color: var(--yellow);
+    }
+
+    /* =======================================================
+       LOGGED-IN PANEL (novo)
+       ======================================================= */
+    .logged {
+      display: none;
+      animation: fadeIn 0.5s var(--ease);
+    }
+    .logged.is-visible { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .logged__card {
+      position: relative;
+      padding: 28px 26px;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(34, 197, 94, 0.08), transparent 60%),
+        var(--surface-2);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 24px;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      overflow: hidden;
+      box-shadow:
+        0 24px 60px -30px rgba(0, 0, 0, 0.9),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+    .logged__card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 25%; right: 25%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--green), transparent);
+      opacity: 0.7;
+    }
+
+    .logged__eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 12px;
+      margin-bottom: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #000;
+      background: var(--green);
+      border-radius: 999px;
+      box-shadow: 0 0 20px -4px var(--green-glow);
+    }
+    .logged__eyebrow::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #000;
+      animation: pulseGreen 1.8s ease-out infinite;
+    }
+    @keyframes pulseGreen {
+      0%   { transform: scale(1);   opacity: 1; }
+      100% { transform: scale(2.6); opacity: 0; }
+    }
+
+    .logged__user {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 22px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logged__avatar {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 2px solid var(--border-strong);
+      background: var(--surface-3);
+      box-shadow: 0 0 30px -10px var(--green-glow);
+    }
+    .logged__avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .logged__avatar-wrap::after {
+      content: '';
+      position: absolute;
+      bottom: 2px; right: 2px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--green);
+      border: 3px solid var(--bg);
+      box-shadow: 0 0 10px var(--green-glow);
+    }
+
+    .logged__info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+      flex: 1;
+    }
+    .logged__name {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 1.35rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .logged__handle {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      color: var(--text-mute);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .logged__status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-top: 2px;
+    }
+
+    .logged__title {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 1.5rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      line-height: 1.1;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .logged__title em { font-style: normal; color: var(--yellow); }
+
+    .logged__sub {
+      font-size: 0.88rem;
+      line-height: 1.55;
+      color: var(--text-dim);
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .logged__countdown {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      margin-bottom: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+    }
+    .logged__countdown strong {
+      color: var(--yellow);
+      font-weight: 600;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .logged__actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn-continue {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 15px 24px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: #000;
+      background: linear-gradient(135deg, var(--yellow), #ffdd33);
+      border-radius: 14px;
+      box-shadow:
+        0 8px 24px -8px var(--yellow-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      transition: transform 0.25s var(--ease), box-shadow 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-continue::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%);
+      transform: translateX(-100%);
+      animation: shine 3.5s ease-in-out infinite;
+    }
+    .btn-continue svg {
+      width: 16px; height: 16px;
+      position: relative;
+      z-index: 1;
+      transition: transform 0.3s var(--ease);
+    }
+    .btn-continue span { position: relative; z-index: 1; }
+    .btn-continue:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 36px -8px var(--yellow-glow);
+    }
+    .btn-continue:hover svg { transform: translateX(4px); }
+
+    .btn-switch {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 20px;
+      font-size: 0.84rem;
+      font-weight: 500;
+      color: var(--text-dim);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      transition: color 0.25s, border-color 0.25s, background 0.25s;
+    }
+    .btn-switch svg { width: 15px; height: 15px; }
+    .btn-switch:hover {
+      color: var(--red);
+      border-color: rgba(230, 57, 70, 0.4);
+      background: var(--red-soft);
+    }
+
+    /* Skeleton de carregamento inicial */
+    .logged__skeleton {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    .sk {
+      background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
+      background-size: 200% 100%;
+      animation: sk 1.4s ease-in-out infinite;
+      border-radius: 12px;
+    }
+    @keyframes sk {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .sk-avatar { width: 64px; height: 64px; border-radius: 18px; }
+    .sk-line   { height: 12px; border-radius: 6px; }
+    .sk-line--title { width: 60%; height: 16px; margin-bottom: 8px; }
+    .sk-line--small { width: 40%; height: 10px; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translate(-50%, 120%);
+      padding: 13px 26px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #000;
+      background: var(--yellow);
+      border-radius: 999px;
+      box-shadow: 0 12px 40px -8px var(--yellow-glow);
+      z-index: 999;
+      opacity: 0;
+      transition: transform 0.45s var(--ease), opacity 0.35s;
+      pointer-events: none;
+      font-family: var(--font-body);
+    }
+    .toast.is-visible {
+      transform: translate(-50%, 0);
+      opacity: 1;
+    }
+
+    /* Reveal */
+    .js [data-reveal="up"] {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+    }
+    .js [data-reveal="up"].is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .js [data-reveal="mask"] {
+      transform: translateY(110%);
+      transition: transform 1s var(--ease);
+    }
+    .js [data-reveal="mask"].is-visible {
+      transform: translateY(0);
+    }
+
+    .js [data-reveal][data-delay="1"] { transition-delay: 0.1s; }
+    .js [data-reveal][data-delay="2"] { transition-delay: 0.2s; }
+    .js [data-reveal][data-delay="3"] { transition-delay: 0.3s; }
+    .js [data-reveal][data-delay="4"] { transition-delay: 0.4s; }
+
+    /* =======================================================
+       RESPONSIVO
+       ======================================================= */
+    @media (max-width: 1000px) {
+      .login { grid-template-columns: 1fr; }
+
+      .login__side {
+        padding: 100px 40px 40px;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        gap: 28px;
+        min-height: auto;
+      }
+
+      .side__brand { margin-top: 0; gap: 24px; }
+      .side__text { max-width: 100%; }
+      .side__whitelist { max-width: 100%; }
+      .side__foot { display: none; }
+
+      .login__main { padding: 50px 40px 80px; }
+    }
+
+    @media (max-width: 640px) {
+      .container { padding: 0 20px; }
+
+      .back {
+        top: 20px;
+        left: 20px;
+        padding: 9px 16px;
+        font-size: 0.78rem;
+      }
+
+      .login__side {
+        padding: 90px 24px 36px;
+        gap: 22px;
+      }
+
+      .side__logo-wrap {
+        width: 100px;
+        height: 100px;
+        border-radius: 22px;
+      }
+
+      .side__text { font-size: 0.92rem; }
+
+      .login__main { padding: 40px 24px 70px; }
+
+      .login__card { max-width: 100%; }
+
+      .discord-btn {
+        padding: 15px 20px;
+        font-size: 0.94rem;
+      }
+
+      .discord-btn svg { width: 20px; height: 20px; }
+
+      .logged__card { padding: 22px 20px; }
+      .logged__avatar { width: 56px; height: 56px; }
+      .logged__name { font-size: 1.15rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+      .js [data-reveal="up"],
+      .js [data-reveal="mask"] {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-image" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="glow glow--1" aria-hidden="true"></div>
+  <div class="glow glow--2" aria-hidden="true"></div>
+
+  <div class="page">
+
+    <a href="index.html" class="back" data-reveal="up">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+      <span>Voltar</span>
+    </a>
+
+    <div class="login">
+
+      <!-- ============ PAINEL VISUAL ============ -->
+      <section class="login__side">
+
+        <div class="side__brand">
+          <div class="side__logo-wrap" data-reveal="up" data-delay="1">
+            <img src="main/files/images/logo.png" alt="Brooklyn Roleplay" class="side__logo" />
+          </div>
+
+          <h1 class="side__title">
+            <span class="line"><span data-reveal="mask">Garanta sua</span></span>
+            <span class="line side__title-alt"><span data-reveal="mask" data-delay="1">whitelist.</span></span>
+          </h1>
+
+          <p class="side__text" data-reveal="up" data-delay="2">
+            Entre com o <strong>Discord</strong> para reservar sua vaga na whitelist,
+            salvar seu personagem e ficar pronto pro dia 1 da cidade.
+          </p>
+
+          <div class="side__whitelist" data-reveal="up" data-delay="3">
+            <div class="side__whitelist-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+            </div>
+            <div class="side__whitelist-text">
+              <strong>Whitelist aberta</strong>
+              <span>Vagas limitadas · Beta fechado em 2027</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="side__foot">
+          <span>Brooklyn Roleplay · 2027</span>
+        </div>
+
+      </section>
+
+      <!-- ============ FORMULÁRIO / LOGGED ============ -->
+      <section class="login__main">
+        <div class="login__card">
+
+          <!-- ========== FORM (não logado) ========== -->
+          <div id="formPanel">
+
+            <div class="whitelist-badge" data-reveal="up">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 2 12l10 10 10-10L12 2z"/><path d="m8 12 4 4 4-4"/></svg>
+              <span>Whitelist</span>
+            </div>
+
+            <h2 class="login__title" data-reveal="up" data-delay="1">
+              Entre com o <em>Discord</em>
+            </h2>
+
+            <p class="login__sub" data-reveal="up" data-delay="1">
+              Sem senha. Sem burocracia. Conecte sua conta, reserve sua vaga
+              e fique pronto pra viver Brooklyn.
+            </p>
+
+            <div class="login__error" id="loginError" role="alert">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+              <span id="loginErrorText"></span>
+            </div>
+
+            <button class="discord-btn" id="discordLogin" data-reveal="up" data-delay="2" type="button">
+              <span class="btn-spinner" aria-hidden="true"></span>
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 13.4 13.4 0 0 0-.587 1.203 18.257 18.257 0 0 0-5.487 0 12.4 12.4 0 0 0-.595-1.203.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+              </svg>
+              <span>Continuar com Discord</span>
+            </button>
+
+            <div class="divider">O que você garante</div>
+
+            <div class="wl-benefits">
+              <div class="wl-benefit" data-reveal="up" data-delay="2">
+                <div class="wl-benefit__check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                </div>
+                <span class="wl-benefit__text"><strong>Vaga reservada</strong> no beta fechado de 2027</span>
+              </div>
+
+              <div class="wl-benefit" data-reveal="up" data-delay="3">
+                <div class="wl-benefit__check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                </div>
+                <span class="wl-benefit__text"><strong>Nome reservado</strong> no servidor antes de todo mundo</span>
+              </div>
+
+              <div class="wl-benefit" data-reveal="up" data-delay="4">
+                <div class="wl-benefit__check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                </div>
+                <span class="wl-benefit__text"><strong>Acesso prioritário</strong> a novidades e eventos fechados</span>
+              </div>
+            </div>
+
+            <div class="login__note" data-reveal="up" data-delay="4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>
+                <strong>Sua privacidade em primeiro lugar.</strong>
+                Apenas seu nome de usuário e e-mail são usados para criar a conta.
+                Nunca publicamos nada no seu perfil.
+              </span>
+            </div>
+
+            <p class="login__terms" data-reveal="up" data-delay="4">
+              Ao continuar, você concorda com os
+              <a href="#">Termos de Uso</a> e a
+              <a href="#">Política de Privacidade</a>.
+            </p>
+
+          </div>
+
+          <!-- ========== LOGGED PANEL ========== -->
+          <div class="logged" id="loggedPanel">
+
+            <div class="logged__card">
+
+              <span class="logged__eyebrow">Sessão ativa</span>
+
+              <!-- Skeleton (enquanto carrega dados) -->
+              <div class="logged__skeleton" id="loggedSkeleton">
+                <div class="sk sk-avatar"></div>
+                <div style="flex:1;">
+                  <div class="sk sk-line sk-line--title"></div>
+                  <div class="sk sk-line sk-line--small"></div>
+                </div>
+              </div>
+
+              <!-- Conteúdo real -->
+              <div class="logged__user" id="loggedUser" style="display:none;">
+                <div class="logged__avatar-wrap">
+                  <img class="logged__avatar" id="loggedAvatar" alt="" />
+                </div>
+                <div class="logged__info">
+                  <h3 class="logged__name" id="loggedName">—</h3>
+                  <span class="logged__handle" id="loggedHandle">@—</span>
+                  <span class="logged__status">Conectado ao Discord</span>
+                </div>
+              </div>
+
+              <h2 class="logged__title" id="loggedTitle" style="display:none;">
+                Você já está <em>logado</em>
+              </h2>
+
+              <p class="logged__sub" id="loggedSub" style="display:none;">
+                Sua sessão está ativa. Redirecionando automaticamente para a área do jogador.
+              </p>
+
+              <div style="text-align:center;" id="loggedCountdownWrap" style="display:none;">
+                <span class="logged__countdown" id="loggedCountdown">
+                  Redirecionando em <strong id="cdNum">5</strong>s
+                </span>
+              </div>
+
+              <div class="logged__actions" id="loggedActions" style="display:none;">
+
+                <a href="dashboard.html" class="btn-continue" id="btnContinue">
+                  <span>Continuar para o site</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14"/>
+                    <path d="m13 6 6 6-6 6"/>
+                  </svg>
+                </a>
+
+                <button class="btn-switch" id="btnSwitch">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <path d="m16 17 5-5-5-5"/>
+                    <path d="M21 12H9"/>
+                  </svg>
+                  <span>Sair e entrar com outra conta</span>
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ===================================================================
+         SUPABASE — credenciais
+         =================================================================== */
+      const SUPABASE_URL      = 'https://ielrhijnaipsokrbfayj.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_LCQck1hzj1LpZKfkygOxFQ_1rcuM0TB';
+
+      const DEMO_MODE = false;
+
+      const $  = (s, c = document) => c.querySelector(s);
+      const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
+
+      /* ---------- Elementos ---------- */
+      const formPanel      = $('#formPanel');
+      const loggedPanel    = $('#loggedPanel');
+      const loginBtn       = $('#discordLogin');
+      const loginError     = $('#loginError');
+      const loginErrorText = $('#loginErrorText');
+      const toastEl        = $('#toast');
+
+      /* Logged panel */
+      const loggedSkeleton = $('#loggedSkeleton');
+      const loggedUser     = $('#loggedUser');
+      const loggedAvatar   = $('#loggedAvatar');
+      const loggedName     = $('#loggedName');
+      const loggedHandle   = $('#loggedHandle');
+      const loggedTitle    = $('#loggedTitle');
+      const loggedSub      = $('#loggedSub');
+      const loggedCountdownWrap = $('#loggedCountdownWrap');
+      const loggedActions  = $('#loggedActions');
+      const cdNum          = $('#cdNum');
+      const btnContinue    = $('#btnContinue');
+      const btnSwitch      = $('#btnSwitch');
+
+      /* ---------- State ---------- */
+      let supabase = null;
+      let redirectTimer = null;
+      let redirectCount = 5;
+
+      /* ---------- Toast ---------- */
+      let toastTimer = null;
+      const showToast = (msg, isError) => {
+        if (!toastEl) return;
+        toastEl.textContent = msg;
+        toastEl.style.background = isError ? '#e63946' : 'var(--yellow)';
+        toastEl.style.color = isError ? '#fff' : '#000';
+        toastEl.classList.add('is-visible');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toastEl.classList.remove('is-visible');
+        }, 3200);
+      };
+
+      const showError = (msg) => {
+        if (!loginError || !loginErrorText) return;
+        loginErrorText.textContent = msg;
+        loginError.classList.add('is-visible');
+      };
+      const hideError = () => {
+        if (!loginError) return;
+        loginError.classList.remove('is-visible');
+      };
+
+      const setLoading = (isLoading) => {
+        if (!loginBtn) return;
+        loginBtn.classList.toggle('is-loading', isLoading);
+        loginBtn.disabled = !!isLoading;
+      };
+
+      function isSupabaseConfigured() {
+        return (
+          typeof SUPABASE_URL === 'string' && SUPABASE_URL.startsWith('https://') &&
+          !SUPABASE_URL.includes('SEU-PROJETO') &&
+          typeof SUPABASE_ANON_KEY === 'string' &&
+          SUPABASE_ANON_KEY.length > 20 &&
+          !SUPABASE_ANON_KEY.includes('SUA_ANON_KEY')
+        );
+      }
+
+      const fallbackAvatar = (name) => {
+        const initial = (name || '?').trim().charAt(0).toUpperCase();
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'>
+          <rect width='40' height='40' fill='%2316161c'/>
+          <text x='20' y='26' font-size='18' fill='%23ffd500' text-anchor='middle'
+                font-family='Anton,sans-serif'>${initial}</text>
+        </svg>`;
+        return 'data:image/svg+xml;utf8,' + svg;
+      };
+
+      /* ---------------------------------------------------
+         REVEAL
+      --------------------------------------------------- */
+      if ('IntersectionObserver' in window) {
+        const upEls = $$('[data-reveal="up"]');
+        const upObs = new IntersectionObserver((entries, o) => {
+          entries.forEach(e => {
+            if (e.isIntersecting) {
+              e.target.classList.add('is-visible');
+              o.unobserve(e.target);
+            }
+          });
+        }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+        upEls.forEach(el => upObs.observe(el));
+
+        const maskEls = $$('[data-reveal="mask"]');
+        const maskParents = new Set();
+        maskEls.forEach(el => {
+          if (el.parentElement) maskParents.add(el.parentElement);
+        });
+
+        const maskObs = new IntersectionObserver((entries, o) => {
+          entries.forEach(e => {
+            if (e.isIntersecting) {
+              e.target.querySelectorAll('[data-reveal="mask"]').forEach(c => c.classList.add('is-visible'));
+              o.unobserve(e.target);
+            }
+          });
+        }, { threshold: 0, rootMargin: '0px 0px -30px 0px' });
+        maskParents.forEach(p => maskObs.observe(p));
+
+        setTimeout(() => {
+          maskEls.forEach(el => {
+            if (!el.classList.contains('is-visible')) {
+              const r = el.getBoundingClientRect();
+              if (r.top < window.innerHeight && r.bottom > 0) {
+                el.classList.add('is-visible');
+              }
+            }
+          });
+        }, 800);
+      } else {
+        $$('[data-reveal]').forEach(el => el.classList.add('is-visible'));
+      }
+
+      /* ===================================================
+         MOSTRA PAINEL DE LOGADO
+         =================================================== */
+      function showLoggedPanel(user) {
+        // Esconde form
+        if (formPanel) formPanel.style.display = 'none';
+
+        // Mostra painel
+        if (loggedPanel) loggedPanel.classList.add('is-visible');
+
+        // Metadados do Discord
+        const meta = (user && user.user_metadata) || {};
+        const name = meta.full_name || meta.name || meta.user_name
+          || (user.email || '').split('@')[0] || 'Jogador';
+        const avatar = meta.avatar_url || meta.picture || fallbackAvatar(name);
+        const handle = '@' + (meta.user_name || name.toLowerCase().replace(/\s+/g, '').slice(0, 24));
+
+        // Preenche depois de um pequeno delay (efeito skeleton)
+        setTimeout(() => {
+          if (loggedAvatar) loggedAvatar.src = avatar;
+          if (loggedName)   loggedName.textContent = name;
+          if (loggedHandle) loggedHandle.textContent = handle;
+
+          if (loggedSkeleton) loggedSkeleton.style.display = 'none';
+          if (loggedUser)     loggedUser.style.display = 'flex';
+          if (loggedTitle)    loggedTitle.style.display = 'block';
+          if (loggedSub)      loggedSub.style.display = 'block';
+          if (loggedCountdownWrap) loggedCountdownWrap.style.display = 'block';
+          if (loggedActions)  loggedActions.style.display = 'flex';
+
+          startRedirectCountdown();
+        }, 450);
+      }
+
+      /* ===================================================
+         COUNTDOWN DE REDIRECIONAMENTO
+         =================================================== */
+      function startRedirectCountdown() {
+        redirectCount = 5;
+        if (cdNum) cdNum.textContent = String(redirectCount);
+
+        clearInterval(redirectTimer);
+        redirectTimer = setInterval(() => {
+          redirectCount -= 1;
+          if (cdNum) cdNum.textContent = String(Math.max(0, redirectCount));
+
+          if (redirectCount <= 0) {
+            clearInterval(redirectTimer);
+            window.location.href = 'dashboard.html';
+          }
+        }, 1000);
+      }
+
+      /* Botão "Continuar" — cancela countdown e vai direto */
+      if (btnContinue) {
+        btnContinue.addEventListener('click', (e) => {
+          e.preventDefault();
+          clearInterval(redirectTimer);
+          window.location.href = 'dashboard.html';
+        });
+      }
+
+      /* Botão "Sair" — desloga e volta pro form */
+      if (btnSwitch) {
+        btnSwitch.addEventListener('click', async () => {
+          clearInterval(redirectTimer);
+
+          try {
+            if (supabase) await supabase.auth.signOut();
+          } catch (err) {
+            console.warn('[Logout] erro:', err);
+          }
+
+          // Volta pro form
+          if (loggedPanel) loggedPanel.classList.remove('is-visible');
+          if (formPanel)   formPanel.style.display = 'block';
+
+          // Reset skeleton
+          if (loggedSkeleton) loggedSkeleton.style.display = 'flex';
+          if (loggedUser)     loggedUser.style.display = 'none';
+          if (loggedTitle)    loggedTitle.style.display = 'none';
+          if (loggedSub)      loggedSub.style.display = 'none';
+          if (loggedCountdownWrap) loggedCountdownWrap.style.display = 'none';
+          if (loggedActions)  loggedActions.style.display = 'none';
+
+          showToast('Sessão encerrada. Faça login de novo.');
+          hideError();
+        });
+      }
+
+      /* ===================================================
+         INICIALIZAÇÃO
+         =================================================== */
+      async function init() {
+        if (DEMO_MODE) {
+          console.warn('[Brooklyn] Login em MODO DEMO.');
+          return;
+        }
+
+        if (!isSupabaseConfigured()) {
+          showError(
+            'Supabase não está configurado neste arquivo. ' +
+            'Preencha SUPABASE_URL e SUPABASE_ANON_KEY.'
+          );
+          return;
+        }
+
+        try {
+          supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+          // Checa sessão
+          const { data: { session } } = await supabase.auth.getSession();
+
+          if (session && session.user) {
+            showLoggedPanel(session.user);
+          }
+        } catch (err) {
+          console.error('[Supabase] erro ao inicializar:', err);
+        }
+      }
+
+      /* ===================================================
+         LOGIN — botão principal
+         =================================================== */
+      if (loginBtn) {
+        loginBtn.addEventListener('click', async () => {
+          hideError();
+
+          if (DEMO_MODE) {
+            setLoading(true);
+            showToast('Modo demo · redirecionando…');
+            setTimeout(() => {
+              window.location.href = 'dashboard.html';
+            }, 900);
+            return;
+          }
+
+          if (!isSupabaseConfigured() || !supabase) {
+            showError('Supabase não está configurado corretamente.');
+            showToast('Supabase não configurado.', true);
+            return;
+          }
+
+          try {
+            setLoading(true);
+            showToast('Redirecionando para o Discord…');
+
+            const redirectTo = window.location.origin + '/dashboard.html';
+
+            const { data, error } = await supabase.auth.signInWithOAuth({
+              provider: 'discord',
+              options: {
+                redirectTo,
+                scopes: 'identify email guilds',
+                queryParams: { prompt: 'consent' }
+              }
+            });
+
+            if (error) throw error;
+
+            if (!data || !data.url) {
+              throw new Error('Não foi possível gerar a URL de autenticação.');
+            }
+
+            // Fallback
+            setTimeout(() => {
+              if (!document.hidden) {
+                window.location.href = data.url;
+              }
+            }, 3000);
+
+          } catch (err) {
+            console.error('[Login] erro:', err);
+            setLoading(false);
+            showError(
+              (err && err.message) ||
+              'Não foi possível iniciar o login. Tente novamente.'
+            );
+            showToast('Falha ao iniciar login.', true);
+          }
+        });
+      }
+
+      /* ---------------------------------------------------
+         LOG
+      --------------------------------------------------- */
+      console.log(
+        '%cBrooklyn Roleplay — Login',
+        'color:#ffd500;font-size:18px;font-weight:bold;letter-spacing:3px;font-family:Anton,sans-serif;'
+      );
+      console.log(
+        '%cSupabase Auth + Discord OAuth · ' + (DEMO_MODE ? 'MODO DEMO' : 'produção'),
+        'color:#9b9ba6;font-size:12px;font-family:monospace;'
+      );
+
+      /* ---------------------------------------------------
+         START
+      --------------------------------------------------- */
+      init();
+    })();
+  </script>
+</body>
+</html>

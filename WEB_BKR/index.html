@@ -1,0 +1,2794 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brooklyn Roleplay — Em desenvolvimento</title>
+  <meta name="description" content="Servidor brasileiro de roleplay para Multi Theft Auto: San Andreas. Em breve. Entre no Discord e acompanhe o desenvolvimento." />
+
+  <link rel="icon" type="image/png" href="main/files/images/logo.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
+
+  <script>document.documentElement.classList.add('js');</script>
+
+  <style>
+    /* =======================================================
+       BROOKLYN ROLEPLAY
+       ======================================================= */
+
+    :root {
+      --bg:            #08080a;
+      --bg-2:          #0b0b0e;
+      --surface:       rgba(255, 255, 255, 0.035);
+      --surface-2:     rgba(255, 255, 255, 0.055);
+      --surface-3:     rgba(255, 255, 255, 0.08);
+
+      --border:        rgba(255, 255, 255, 0.09);
+      --border-strong: rgba(255, 255, 255, 0.16);
+
+      --yellow:        #ffd500;
+      --yellow-soft:   rgba(255, 213, 0, 0.14);
+      --yellow-glow:   rgba(255, 213, 0, 0.28);
+
+      --red:           #e63946;
+      --red-soft:      rgba(230, 57, 70, 0.14);
+
+      --green:         #22c55e;
+      --green-glow:    rgba(34, 197, 94, 0.4);
+
+      --purple:        #9b59ff;
+
+      --text:          #f4f4f6;
+      --text-dim:      #a3a3ae;
+      --text-mute:     #65656f;
+
+      --font-display:  'Anton', 'Arial Narrow', sans-serif;
+      --font-body:     'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono:     'JetBrains Mono', ui-monospace, monospace;
+
+      --container:     1240px;
+      --header-h:      76px;
+
+      --ease:          cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    * { margin: 0; padding: 0; }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 90px;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      font-size: 16px;
+      overflow-x: hidden;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      position: relative;
+    }
+
+    img, svg { display: block; max-width: 100%; }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; cursor: pointer; background: none; border: none; color: inherit; }
+
+    ::selection { background: var(--yellow); color: #000; }
+
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb {
+      background: #1c1c22;
+      border: 2px solid var(--bg);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: #2a2a32; }
+
+    .container {
+      width: 100%;
+      max-width: var(--container);
+      margin: 0 auto;
+      padding: 0 28px;
+    }
+
+    .bg-image {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: url('main/files/images/background.png');
+      background-size: cover; background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0.15;
+      filter: grayscale(30%) brightness(0.6);
+    }
+
+    .grain {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      opacity: 0.035; mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    }
+
+    .glow {
+      position: fixed; z-index: 0; border-radius: 50%;
+      pointer-events: none; filter: blur(140px);
+    }
+    .glow--hero {
+      width: 640px; height: 640px;
+      top: -260px; left: -180px;
+      background: radial-gradient(circle, rgba(255, 213, 0, 0.22), transparent 65%);
+      animation: glowDrift 22s ease-in-out infinite;
+    }
+    .glow--cta {
+      width: 560px; height: 560px;
+      bottom: -220px; right: -180px;
+      background: radial-gradient(circle, rgba(255, 213, 0, 0.16), transparent 65%);
+      animation: glowDrift 26s ease-in-out infinite reverse;
+    }
+    @keyframes glowDrift {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50%      { transform: translate(40px, -30px) scale(1.08); }
+    }
+
+    .header, main, .footer { position: relative; z-index: 2; }
+
+    /* =======================================================
+       BOTÕES
+       ======================================================= */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 22px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      border-radius: 999px;
+      transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease),
+                  background 0.3s, color 0.3s, border-color 0.3s;
+      white-space: nowrap;
+    }
+
+    .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    .btn--primary {
+      background: var(--yellow);
+      color: #000;
+    }
+    .btn--primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 40px -12px var(--yellow-glow);
+    }
+
+    .btn--outline {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .btn--outline:hover {
+      color: var(--yellow);
+      border-color: rgba(255, 213, 0, 0.45);
+      transform: translateY(-2px);
+    }
+
+    .btn--lg {
+      padding: 15px 28px;
+      font-size: 0.95rem;
+    }
+
+    .btn--sm {
+      padding: 9px 18px;
+      font-size: 0.82rem;
+    }
+
+    /* =======================================================
+       HEADER
+       ======================================================= */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid transparent;
+      transition: background 0.3s, border-color 0.3s, backdrop-filter 0.3s;
+    }
+    .header.is-scrolled {
+      background: rgba(8, 8, 10, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom-color: var(--border);
+    }
+
+    .header__inner {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      width: 100%;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+    .brand__logo {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      transition: transform 0.35s var(--ease);
+      filter: drop-shadow(0 0 14px rgba(255, 213, 0, 0.25));
+    }
+    .brand:hover .brand__logo { transform: rotate(-6deg) scale(1.05); }
+
+    .brand__text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+      font-family: var(--font-display);
+      letter-spacing: 0.04em;
+    }
+    .brand__text strong {
+      font-size: 1.2rem;
+      font-weight: 400;
+      color: var(--text);
+    }
+    .brand__text em {
+      font-style: normal;
+      font-size: 0.68rem;
+      letter-spacing: 0.32em;
+      color: var(--yellow);
+      margin-top: 4px;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+    }
+    .nav__link {
+      position: relative;
+      padding: 8px 14px;
+      font-size: 0.86rem;
+      font-weight: 500;
+      color: var(--text-dim);
+      border-radius: 999px;
+      transition: color 0.25s;
+    }
+    .nav__link::after {
+      content: '';
+      position: absolute;
+      left: 50%; bottom: 2px;
+      width: 0; height: 1px;
+      background: var(--yellow);
+      transform: translateX(-50%);
+      transition: width 0.3s var(--ease);
+    }
+    .nav__link:hover { color: var(--text); }
+    .nav__link:hover::after,
+    .nav__link.is-active::after { width: 20px; }
+    .nav__link.is-active { color: var(--yellow); }
+
+    .header__actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    /* Slot onde o JS injeta o botão de login ou o user chip */
+    .auth-slot {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* User chip (aparece quando logado) */
+    .user-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 14px 6px 6px;
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: transform 0.25s var(--ease), border-color 0.25s, background 0.25s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+    }
+    .user-chip:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255, 213, 0, 0.4);
+      background: var(--surface-2);
+    }
+
+    .user-chip__avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .user-chip__avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid var(--border-strong);
+      background: var(--surface-2);
+      display: block;
+    }
+    .user-chip__status-dot {
+      position: absolute;
+      bottom: -1px; right: -1px;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--green);
+      border: 2px solid var(--bg);
+      box-shadow: 0 0 8px var(--green-glow);
+    }
+
+    .user-chip__info {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      min-width: 0;
+      max-width: 130px;
+    }
+    .user-chip__name {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .user-chip__role {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.56rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      line-height: 1.2;
+    }
+    .user-chip__role.is-admin  { color: var(--yellow); }
+    .user-chip__role.is-staff  { color: var(--purple); }
+
+    /* Skeleton (enquanto carrega) */
+    .auth-skeleton {
+      width: 118px;
+      height: 42px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
+      background-size: 200% 100%;
+      animation: sk 1.4s ease-in-out infinite;
+    }
+    @keyframes sk {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .burger {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-left: 4px;
+    }
+    .burger span {
+      display: block;
+      width: 16px;
+      height: 1.5px;
+      margin: 0 auto;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.3s var(--ease), opacity 0.25s;
+    }
+    .burger.is-open span:nth-child(1) { transform: translateY(3.25px) rotate(45deg); }
+    .burger.is-open span:nth-child(2) { transform: translateY(-3.25px) rotate(-45deg); }
+
+    /* =======================================================
+       HERO
+       ======================================================= */
+    .hero {
+      padding: 50px 0 60px;
+      position: relative;
+    }
+
+    .hero__inner {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .hero__meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 16px;
+      margin-bottom: 28px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .hero__meta .sep {
+      width: 1px;
+      height: 10px;
+      background: var(--border-strong);
+    }
+    .dot {
+      position: relative;
+      width: 6px; height: 6px;
+      background: var(--yellow);
+      border-radius: 50%;
+    }
+    .dot::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: var(--yellow);
+      animation: dotPulse 2s ease-out infinite;
+    }
+    @keyframes dotPulse {
+      0%   { transform: scale(1);   opacity: 0.9; }
+      100% { transform: scale(3.2); opacity: 0; }
+    }
+
+    .age-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+      color: #fff;
+      background: var(--red);
+      border-radius: 6px;
+      box-shadow: 0 0 14px rgba(230, 57, 70, 0.45);
+      line-height: 1;
+    }
+
+    .hero__visual {
+      display: flex;
+      align-items: center;
+      gap: 44px;
+      margin-bottom: 44px;
+      width: 100%;
+    }
+
+    .hero__logo-wrap {
+      position: relative;
+      flex-shrink: 0;
+      width: clamp(140px, 18vw, 230px);
+      height: clamp(140px, 18vw, 230px);
+      display: grid;
+      place-items: center;
+      border-radius: 32px;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(255, 213, 0, 0.14), transparent 60%),
+        var(--surface-2);
+      border: 1px solid var(--border-strong);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow:
+        0 0 80px -30px var(--yellow-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+    .hero__logo-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 32px;
+      padding: 1px;
+      background: linear-gradient(160deg, rgba(255, 213, 0, 0.5), transparent 40%, transparent 60%, rgba(255, 213, 0, 0.15));
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .hero__logo {
+      width: 76%;
+      height: 76%;
+      object-fit: contain;
+      filter: drop-shadow(0 0 30px rgba(255, 213, 0, 0.4));
+      animation: logoFloat 6s ease-in-out infinite;
+    }
+    @keyframes logoFloat {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+
+    .hero__title {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: clamp(3.4rem, 13vw, 10.5rem);
+      line-height: 0.86;
+      letter-spacing: 0.005em;
+      text-transform: uppercase;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .hero__line {
+      display: block;
+      overflow: hidden;
+    }
+    .hero__line > span {
+      display: inline-block;
+      will-change: transform;
+    }
+
+    .hero__line--alt > span {
+      color: transparent;
+      -webkit-text-stroke: 2px var(--yellow);
+      text-stroke: 2px var(--yellow);
+    }
+
+    .hero__bottom {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 36px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+      width: 100%;
+    }
+
+    .hero__text {
+      max-width: 540px;
+      font-size: 1rem;
+      line-height: 1.65;
+      color: var(--text-dim);
+    }
+    .hero__text strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .hero__status {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 36px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .hero__status-key { color: var(--text-mute); }
+    .hero__status-val { color: var(--yellow); }
+
+    /* =======================================================
+       CONTAGEM REGRESSIVA
+       ======================================================= */
+    .countdown {
+      margin-top: 44px;
+      width: 100%;
+    }
+
+    .countdown__head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+    }
+    .countdown__head::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .countdown__grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      perspective: 800px;
+    }
+
+    .cd-block {
+      position: relative;
+      padding: 22px 12px 16px;
+      text-align: center;
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      border-radius: 20px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow:
+        0 24px 60px -34px rgba(0, 0, 0, 0.95),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      transition: transform 0.4s var(--ease), border-color 0.4s, box-shadow 0.4s;
+    }
+    .cd-block::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 22%;
+      right: 22%; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 213, 0, 0.55), transparent);
+    }
+    .cd-block:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255, 213, 0, 0.35);
+      box-shadow:
+        0 30px 70px -34px rgba(0, 0, 0, 1),
+        0 0 50px -22px var(--yellow-glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    .cd-block__glow {
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      background: radial-gradient(circle at 50% 0%, rgba(255, 213, 0, 0.16), transparent 65%);
+      opacity: 0;
+      transition: opacity 0.5s;
+      pointer-events: none;
+    }
+    .cd-block:hover .cd-block__glow { opacity: 1; }
+
+    .cd-num {
+      display: block;
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: clamp(2.2rem, 6vw, 4.2rem);
+      line-height: 0.9;
+      letter-spacing: 0.01em;
+      color: var(--yellow);
+      text-shadow: 0 0 40px rgba(255, 213, 0, 0.35);
+      font-variant-numeric: tabular-nums;
+      transition: transform 0.35s var(--ease), opacity 0.35s, filter 0.35s;
+    }
+
+    .cd-num.is-ticking {
+      animation: tick 0.55s var(--ease);
+    }
+    @keyframes tick {
+      0%   { transform: translateY(0) rotateX(0deg);   opacity: 1; filter: blur(0); }
+      35%  { transform: translateY(-10px) rotateX(-40deg); opacity: 0.15; filter: blur(3px); }
+      60%  { transform: translateY(10px) rotateX(40deg);  opacity: 0.15; filter: blur(3px); }
+      100% { transform: translateY(0) rotateX(0deg);   opacity: 1; filter: blur(0); }
+    }
+
+    .cd-label {
+      display: block;
+      margin-top: 10px;
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+    }
+
+    .countdown__note {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 16px;
+      font-size: 0.8rem;
+      line-height: 1.55;
+      color: var(--text-dim);
+    }
+    .countdown__note svg {
+      width: 15px; height: 15px;
+      flex-shrink: 0;
+      margin-top: 3px;
+      color: var(--yellow);
+    }
+    .countdown__note strong { color: var(--yellow); font-weight: 500; }
+
+    /* =======================================================
+       MARQUEE
+       ======================================================= */
+    .marquee {
+      background: var(--yellow);
+      color: #000;
+      overflow: hidden;
+      padding: 12px 0;
+      border-top: 1px solid rgba(0, 0, 0, 0.15);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+      position: relative;
+      z-index: 2;
+    }
+    .marquee__track {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      width: max-content;
+      animation: marquee 40s linear infinite;
+      font-family: var(--font-display);
+      font-size: 1rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .marquee__track em {
+      font-style: normal;
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* =======================================================
+       SECTION
+       ======================================================= */
+    .section {
+      padding: 90px 0;
+      position: relative;
+    }
+
+    .section__head {
+      margin-bottom: 44px;
+    }
+    .section__title {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: clamp(2.2rem, 5.4vw, 4rem);
+      line-height: 0.98;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+    }
+    .section__title .line {
+      display: block;
+      overflow: hidden;
+    }
+    .section__title .line > span {
+      display: inline-block;
+      will-change: transform;
+    }
+
+    /* =======================================================
+       SOBRE
+       ======================================================= */
+    .about {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: start;
+    }
+
+    .about__title {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+    }
+    .about__title .line {
+      display: block;
+      overflow: hidden;
+    }
+    .about__title .line > span {
+      display: inline-block;
+      will-change: transform;
+    }
+    .about__title .line:nth-child(2) > span { color: var(--yellow); }
+
+    .about__lead {
+      font-size: 1.1rem;
+      line-height: 1.55;
+      color: var(--text);
+      margin-bottom: 20px;
+      font-weight: 400;
+    }
+    .about__text {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: var(--text-dim);
+      margin-bottom: 14px;
+      max-width: 500px;
+    }
+
+    .link-arrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      padding-bottom: 4px;
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: var(--yellow);
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.3s, gap 0.3s var(--ease);
+    }
+    .link-arrow svg {
+      width: 16px;
+      height: 16px;
+      transition: transform 0.3s var(--ease);
+    }
+    .link-arrow:hover {
+      border-bottom-color: var(--yellow);
+      gap: 14px;
+    }
+    .link-arrow:hover svg { transform: translateX(3px); }
+
+    /* =======================================================
+       RECURSOS
+       ======================================================= */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .feature {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 26px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      overflow: hidden;
+      transition: transform 0.35s var(--ease), border-color 0.35s, background 0.35s;
+    }
+    .feature::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 15%;
+      right: 15%; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 213, 0, 0.4), transparent);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .feature:hover {
+      transform: translateY(-5px);
+      border-color: rgba(255, 213, 0, 0.28);
+      background: var(--surface-2);
+      box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.9);
+    }
+    .feature:hover::before { opacity: 1; }
+
+    .feature__num {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      color: var(--yellow);
+      padding: 4px 10px;
+      border: 1px solid rgba(255, 213, 0, 0.28);
+      border-radius: 999px;
+      background: rgba(255, 213, 0, 0.06);
+      margin-bottom: 20px;
+    }
+
+    .feature__title {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 1.4rem;
+      line-height: 1.05;
+      letter-spacing: 0.015em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .feature__text {
+      font-size: 0.88rem;
+      line-height: 1.65;
+      color: var(--text-dim);
+    }
+
+    /* =======================================================
+       ROADMAP
+       ======================================================= */
+    .roadmap {
+      position: relative;
+      padding-left: 40px;
+    }
+
+    .roadmap__line {
+      position: absolute;
+      top: 20px; bottom: 20px;
+      left: 8px;
+      width: 1px;
+      background: var(--border);
+      overflow: hidden;
+      border-radius: 2px;
+    }
+    .roadmap__fill {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 0%;
+      background: var(--yellow);
+      box-shadow: 0 0 20px var(--yellow-glow);
+      transition: height 0.2s linear;
+    }
+
+    .milestone {
+      position: relative;
+      padding-bottom: 14px;
+    }
+    .milestone:last-child { padding-bottom: 0; }
+
+    .milestone__marker {
+      position: absolute;
+      top: 24px;
+      left: -38px;
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 1px solid var(--border-strong);
+      transition: border-color 0.35s, background 0.35s, transform 0.35s var(--ease);
+      z-index: 2;
+    }
+    .milestone.is-inview .milestone__marker {
+      border-color: var(--yellow);
+      background: var(--yellow);
+      transform: scale(1.1);
+      box-shadow: 0 0 20px var(--yellow-glow);
+    }
+
+    .milestone__content {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px 26px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      max-width: 720px;
+      transition: border-color 0.35s, background 0.35s;
+    }
+    .milestone.is-inview .milestone__content {
+      border-color: var(--border-strong);
+    }
+
+    .milestone__status {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+    .milestone__status.is-done {
+      color: var(--text-dim);
+      border-color: var(--border-strong);
+    }
+    .milestone__status.is-progress {
+      color: var(--yellow);
+      border-color: rgba(255, 213, 0, 0.4);
+      background: var(--yellow-soft);
+    }
+
+    .milestone__title {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 1.4rem;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .milestone__text {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: var(--text-dim);
+    }
+
+    /* =======================================================
+       APOIADOR / PIX
+       ======================================================= */
+    .support {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 50px;
+      align-items: start;
+    }
+
+    .support__title {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: clamp(2rem, 4.5vw, 3.4rem);
+      line-height: 0.98;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .support__title .line { display: block; overflow: hidden; }
+    .support__title .line > span { display: inline-block; will-change: transform; }
+    .support__title em {
+      font-style: normal;
+      color: var(--yellow);
+    }
+
+    .support__lead {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .support__text {
+      font-size: 0.92rem;
+      line-height: 1.65;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+      max-width: 500px;
+    }
+    .support__text strong {
+      color: var(--yellow);
+      font-weight: 500;
+    }
+
+    .perks {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .perk {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: transform 0.3s var(--ease), border-color 0.3s, background 0.3s;
+    }
+    .perk:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255, 213, 0, 0.3);
+      background: var(--surface-2);
+    }
+
+    .perk__icon {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      flex-shrink: 0;
+      border-radius: 10px;
+      background: rgba(255, 213, 0, 0.1);
+      border: 1px solid rgba(255, 213, 0, 0.22);
+      color: var(--yellow);
+    }
+    .perk__icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .perk__text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .perk__text strong {
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .perk__text span {
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: var(--text-dim);
+    }
+
+    .pix-card {
+      position: relative;
+      padding: 32px 30px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      border-radius: 24px;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      overflow: hidden;
+      box-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.9);
+    }
+    .pix-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 20%;
+      right: 20%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--yellow), transparent);
+      opacity: 0.6;
+    }
+    .pix-card::after {
+      content: '';
+      position: absolute;
+      top: -140px; right: -140px;
+      width: 320px; height: 320px;
+      background: radial-gradient(circle, rgba(255, 213, 0, 0.16), transparent 65%);
+      filter: blur(40px);
+      pointer-events: none;
+    }
+
+    .pix-card__head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 22px;
+      position: relative;
+    }
+    .pix-card__icon {
+      display: grid;
+      place-items: center;
+      width: 44px; height: 44px;
+      border-radius: 14px;
+      color: #000;
+      background: var(--yellow);
+      box-shadow: 0 0 26px -6px var(--yellow-glow);
+      flex-shrink: 0;
+    }
+    .pix-card__icon svg { width: 20px; height: 20px; }
+
+    .pix-card__title {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 1.4rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+    .pix-card__sub {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      margin-top: 6px;
+    }
+
+    .pix-card__label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .pix-card__key {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 12px 12px 16px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin-bottom: 18px;
+      transition: border-color 0.3s, background 0.3s;
+      position: relative;
+    }
+    .pix-card__key:hover {
+      border-color: rgba(255, 213, 0, 0.4);
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .pix-card__key code {
+      flex: 1;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--yellow);
+      word-break: break-all;
+      letter-spacing: 0.02em;
+      line-height: 1.4;
+      font-weight: 500;
+    }
+
+    .pix-card__copy {
+      display: grid;
+      place-items: center;
+      width: 36px; height: 36px;
+      border-radius: 11px;
+      background: var(--yellow);
+      color: #000;
+      flex-shrink: 0;
+      transition: transform 0.25s var(--ease), box-shadow 0.3s;
+    }
+    .pix-card__copy svg { width: 15px; height: 15px; }
+    .pix-card__copy:hover {
+      transform: scale(1.06);
+      box-shadow: 0 0 22px -4px var(--yellow-glow);
+    }
+
+    .pix-card__info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      position: relative;
+    }
+    .pix-card__info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.8rem;
+    }
+    .pix-card__info-row span:first-child {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+    }
+    .pix-card__info-row span:last-child {
+      color: var(--text);
+      font-weight: 500;
+      text-align: right;
+    }
+
+    .pix-card__note {
+      margin-top: 18px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(255, 213, 0, 0.06);
+      border: 1px solid rgba(255, 213, 0, 0.2);
+      font-size: 0.78rem;
+      line-height: 1.55;
+      color: var(--text-dim);
+      position: relative;
+    }
+    .pix-card__note strong { color: var(--yellow); }
+
+    /* =======================================================
+       CONFIANÇA / LEIS
+       ======================================================= */
+    .trust {
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.012), transparent);
+      position: relative;
+      z-index: 2;
+    }
+
+    .trust__head {
+      text-align: center;
+      margin-bottom: 26px;
+    }
+    .trust__title {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: clamp(1.4rem, 2.4vw, 1.8rem);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .trust__sub {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .trust__grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .trust__item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 18px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: border-color 0.3s, background 0.3s;
+    }
+    .trust__item:hover {
+      border-color: var(--border-strong);
+      background: var(--surface-2);
+    }
+
+    .trust__icon {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      border-radius: 10px;
+      background: rgba(255, 213, 0, 0.08);
+      border: 1px solid rgba(255, 213, 0, 0.2);
+      color: var(--yellow);
+    }
+    .trust__icon svg { width: 17px; height: 17px; }
+
+    .trust__text {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+    .trust__text strong {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .trust__text span {
+      font-size: 0.75rem;
+      line-height: 1.4;
+      color: var(--text-dim);
+    }
+
+    .trust__links {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 24px;
+      margin-top: 26px;
+      flex-wrap: wrap;
+      font-size: 0.82rem;
+    }
+    .trust__links a {
+      color: var(--text-dim);
+      border-bottom: 1px solid transparent;
+      transition: color 0.25s, border-color 0.25s;
+      padding-bottom: 2px;
+    }
+    .trust__links a:hover {
+      color: var(--yellow);
+      border-bottom-color: var(--yellow);
+    }
+    .trust__links .divider {
+      width: 1px;
+      height: 12px;
+      background: var(--border-strong);
+    }
+
+    /* =======================================================
+       CTA
+       ======================================================= */
+    .section--cta {
+      padding: 90px 0 100px;
+    }
+
+    .cta {
+      position: relative;
+      max-width: 860px;
+      padding: 50px 44px;
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 26px;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      overflow: hidden;
+      box-shadow: 0 40px 100px -50px rgba(0, 0, 0, 0.9);
+    }
+    .cta::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 25%;
+      right: 25%; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 213, 0, 0.6), transparent);
+    }
+    .cta::after {
+      content: '';
+      position: absolute;
+      top: -180px; right: -120px;
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, rgba(255, 213, 0, 0.16), transparent 65%);
+      filter: blur(60px);
+      pointer-events: none;
+    }
+
+    .cta__title {
+      position: relative;
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: clamp(2.2rem, 5.4vw, 4.2rem);
+      line-height: 0.96;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .cta__title .line { display: block; overflow: hidden; }
+    .cta__title .line > span { display: inline-block; will-change: transform; }
+    .cta__title-alt > span {
+      color: transparent;
+      -webkit-text-stroke: 1.5px var(--yellow);
+    }
+
+    .cta__text {
+      position: relative;
+      font-size: 0.98rem;
+      line-height: 1.65;
+      color: var(--text-dim);
+      max-width: 540px;
+      margin-bottom: 28px;
+    }
+
+    /* =======================================================
+       FOOTER
+       ======================================================= */
+    .footer {
+      padding: 44px 0 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 30px;
+      flex-wrap: wrap;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .footer__brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .footer__brand img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+    }
+    .footer__brand-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.3;
+    }
+    .footer__brand-text strong {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 1.05rem;
+      letter-spacing: 0.04em;
+    }
+    .footer__brand-text span {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+      color: var(--text-mute);
+      margin-top: 3px;
+    }
+
+    .footer__link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-size: 0.86rem;
+      font-weight: 500;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: color 0.3s, border-color 0.3s, gap 0.3s var(--ease);
+    }
+    .footer__link svg { width: 14px; height: 14px; }
+    .footer__link:hover {
+      color: var(--yellow);
+      border-color: rgba(255, 213, 0, 0.4);
+      gap: 12px;
+    }
+
+    .footer__bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding-top: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.04em;
+      color: var(--text-mute);
+    }
+    .footer__bottom .age-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .footer__bottom .age-inline b {
+      display: inline-grid;
+      place-items: center;
+      min-width: 22px;
+      height: 20px;
+      padding: 0 6px;
+      background: var(--red);
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+      border-radius: 4px;
+      font-weight: 400;
+    }
+
+    /* =======================================================
+       TOAST
+       ======================================================= */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translate(-50%, 120%);
+      padding: 13px 26px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #000;
+      background: var(--yellow);
+      border-radius: 999px;
+      box-shadow: 0 12px 40px -8px var(--yellow-glow);
+      z-index: 999;
+      opacity: 0;
+      transition: transform 0.45s var(--ease), opacity 0.35s;
+      pointer-events: none;
+      font-family: var(--font-body);
+    }
+    .toast.is-visible {
+      transform: translate(-50%, 0);
+      opacity: 1;
+    }
+
+    /* =======================================================
+       BOTÃO VOLTAR AO TOPO
+       ======================================================= */
+    .to-top {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 90;
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--surface-2);
+      border: 1px solid var(--border-strong);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      color: var(--text-dim);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(16px);
+      transition: opacity 0.35s, visibility 0.35s, transform 0.35s var(--ease),
+                  color 0.25s, border-color 0.25s, box-shadow 0.3s;
+    }
+    .to-top svg { width: 18px; height: 18px; }
+    .to-top.is-visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .to-top:hover {
+      color: var(--yellow);
+      border-color: rgba(255, 213, 0, 0.45);
+      box-shadow: 0 0 30px -8px var(--yellow-glow);
+    }
+
+    /* =======================================================
+       REVEAL
+       ======================================================= */
+    .js [data-reveal="up"] {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+    }
+    .js [data-reveal="up"].is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .js [data-reveal="mask"] {
+      transform: translateY(110%);
+      transition: transform 1s var(--ease);
+    }
+    .js [data-reveal="mask"].is-visible {
+      transform: translateY(0);
+    }
+
+    .js [data-reveal][data-delay="1"] { transition-delay: 0.1s; }
+    .js [data-reveal][data-delay="2"] { transition-delay: 0.2s; }
+    .js [data-reveal][data-delay="3"] { transition-delay: 0.3s; }
+    .js [data-reveal][data-delay="4"] { transition-delay: 0.4s; }
+    .js [data-reveal][data-delay="5"] { transition-delay: 0.5s; }
+
+    /* =======================================================
+       RESPONSIVO
+       ======================================================= */
+    @media (max-width: 1000px) {
+      .features { grid-template-columns: repeat(2, 1fr); }
+      .about { grid-template-columns: 1fr; gap: 32px; }
+      .about__left, .about__right { max-width: 100%; }
+      .support { grid-template-columns: 1fr; gap: 34px; }
+      .trust__grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 860px) {
+      .hide-sm { display: none; }
+      .burger { display: flex; }
+
+      .nav {
+        position: fixed;
+        top: var(--header-h);
+        left: 0; right: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        padding: 12px 24px 24px;
+        background: rgba(8, 8, 10, 0.97);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border);
+        transform: translateY(-16px);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.35s var(--ease);
+      }
+      .nav.is-open {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+      }
+      .nav__link {
+        padding: 16px 12px;
+        border-radius: 8px;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.98rem;
+      }
+      .nav__link:last-child { border-bottom: none; }
+      .nav__link::after { display: none; }
+      .nav__link.is-active { color: var(--yellow); background: rgba(255, 213, 0, 0.05); }
+
+      .section { padding: 70px 0; }
+      .section__head { margin-bottom: 36px; }
+
+      .hero { padding: 40px 0 50px; }
+
+      .hero__visual {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 22px;
+        margin-bottom: 32px;
+      }
+      .hero__logo-wrap {
+        width: 120px;
+        height: 120px;
+        border-radius: 24px;
+      }
+      .hero__title { width: 100%; }
+
+      .hero__bottom {
+        grid-template-columns: 1fr;
+        gap: 22px;
+        align-items: start;
+      }
+      .hero__status { margin-top: 28px; }
+
+      .countdown__grid { grid-template-columns: repeat(2, 1fr); }
+      .cd-block { padding: 20px 10px 14px; border-radius: 16px; }
+
+      .cta { padding: 38px 26px; border-radius: 22px; }
+      .section--cta { padding: 70px 0 80px; }
+
+      .to-top { bottom: 20px; right: 20px; width: 42px; height: 42px; }
+
+      .trust__grid { grid-template-columns: 1fr; gap: 10px; }
+
+      .user-chip__info { max-width: 90px; }
+      .user-chip__role { font-size: 0.5rem; }
+    }
+
+    @media (max-width: 640px) {
+      .container { padding: 0 20px; }
+
+      .brand__logo { width: 42px; height: 42px; }
+      .brand__text strong { font-size: 1.05rem; }
+      .brand__text em { font-size: 0.6rem; }
+
+      .hero__title { letter-spacing: 0; }
+      .hero__line--alt > span { -webkit-text-stroke-width: 1.5px; }
+
+      .features { grid-template-columns: 1fr; gap: 12px; }
+      .feature { padding: 24px 22px; border-radius: 18px; }
+
+      .roadmap { padding-left: 30px; }
+      .milestone__marker { left: -28px; width: 13px; height: 13px; top: 22px; }
+      .milestone__content { padding: 20px 20px; border-radius: 16px; }
+
+      .marquee__track { font-size: 0.9rem; gap: 26px; }
+
+      .pix-card { padding: 26px 20px; border-radius: 20px; }
+      .pix-card__key { padding: 11px 11px 11px 13px; border-radius: 12px; }
+      .pix-card__key code { font-size: 0.82rem; }
+
+      .perks { grid-template-columns: 1fr; }
+
+      .cta { padding: 32px 22px; border-radius: 20px; }
+
+      .footer__top { flex-direction: column; align-items: flex-start; }
+      .footer__bottom { flex-direction: column; align-items: flex-start; }
+
+      .cd-num { font-size: clamp(1.8rem, 10vw, 2.6rem); }
+      .cd-label { font-size: 0.58rem; letter-spacing: 0.16em; }
+
+      /* No mobile, esconder nome/handle do chip */
+      .user-chip__info { display: none; }
+      .user-chip { padding: 4px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+      }
+      .js [data-reveal="up"],
+      .js [data-reveal="mask"] {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-image" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="glow glow--hero" aria-hidden="true"></div>
+  <div class="glow glow--cta" aria-hidden="true"></div>
+
+  <!-- ================= HEADER ================= -->
+  <header class="header" id="header">
+    <div class="container header__inner">
+
+      <a href="#inicio" class="brand">
+        <img src="main/files/images/logo.png" alt="Brooklyn Roleplay" class="brand__logo" />
+        <span class="brand__text">
+          <strong>Brooklyn</strong>
+          <em>Roleplay</em>
+        </span>
+      </a>
+
+      <nav class="nav" id="navMenu">
+        <a href="#sobre" class="nav__link">Sobre</a>
+        <a href="#recursos" class="nav__link">Recursos</a>
+        <a href="#desenvolvimento" class="nav__link">Desenvolvimento</a>
+        <a href="#apoiar" class="nav__link">Apoiar</a>
+        <a href="#comunidade" class="nav__link">Comunidade</a>
+      </nav>
+
+      <div class="header__actions">
+        <!-- Slot dinâmico — JS preenche com Login OU user chip -->
+        <div class="auth-slot" id="authSlot">
+          <!-- Skeleton enquanto checa sessão -->
+          <div class="auth-skeleton" aria-hidden="true"></div>
+        </div>
+
+        <a href="https://discord.gg/pQAfHmccxx" target="_blank" rel="noopener" class="btn btn--primary hide-sm">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 13.4 13.4 0 0 0-.587 1.203 18.257 18.257 0 0 0-5.487 0 12.4 12.4 0 0 0-.595-1.203.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+          <span>Discord</span>
+        </a>
+        <button class="burger" id="burger" aria-label="Abrir menu" aria-expanded="false">
+          <span></span><span></span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ================= HERO ================= -->
+    <section class="hero" id="inicio">
+      <div class="container hero__inner">
+
+        <div class="hero__meta" data-reveal="up">
+          <span class="dot"></span>
+          <span>Em desenvolvimento</span>
+          <span class="sep"></span>
+          <span class="age-badge">18+</span>
+          <span class="sep"></span>
+          <span>2027</span>
+        </div>
+
+        <div class="hero__visual">
+          <div class="hero__logo-wrap" data-reveal="up" data-delay="1">
+            <img src="main/files/images/logo.png" alt="Brooklyn Roleplay" class="hero__logo" />
+          </div>
+
+          <h1 class="hero__title">
+            <span class="hero__line"><span data-reveal="mask">Brooklyn</span></span>
+            <span class="hero__line hero__line--alt"><span data-reveal="mask" data-delay="1">Roleplay</span></span>
+          </h1>
+        </div>
+
+        <div class="hero__bottom">
+          <p class="hero__text" data-reveal="up" data-delay="2">
+            Um servidor de roleplay brasileiro para <strong>Multi Theft Auto: San Andreas</strong>.
+            Uma cidade viva, com economia, facções, empregos e histórias que ficam.
+          </p>
+
+          <a href="https://discord.gg/pQAfHmccxx" target="_blank" rel="noopener" class="btn btn--primary btn--lg" data-reveal="up" data-delay="3">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 13.4 13.4 0 0 0-.587 1.203 18.257 18.257 0 0 0-5.487 0 12.4 12.4 0 0 0-.595-1.203.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+            Entrar no Discord
+          </a>
+        </div>
+
+        <div class="hero__status" data-reveal="up" data-delay="4">
+          <span class="hero__status-key">status</span>
+          <span class="hero__status-val">aguardando lançamento</span>
+        </div>
+
+        <!-- ============ CONTAGEM REGRESSIVA ============ -->
+        <div class="countdown" data-reveal="up" data-delay="5">
+          <div class="countdown__head">
+            <span>Contagem regressiva</span>
+          </div>
+
+          <div class="countdown__grid" id="countdownGrid">
+            <div class="cd-block">
+              <div class="cd-block__glow"></div>
+              <span class="cd-num" id="cdDays" data-unit="dias">000</span>
+              <span class="cd-label">Dias</span>
+            </div>
+            <div class="cd-block">
+              <div class="cd-block__glow"></div>
+              <span class="cd-num" id="cdHours" data-unit="horas">00</span>
+              <span class="cd-label">Horas</span>
+            </div>
+            <div class="cd-block">
+              <div class="cd-block__glow"></div>
+              <span class="cd-num" id="cdMinutes" data-unit="min">00</span>
+              <span class="cd-label">Minutos</span>
+            </div>
+            <div class="cd-block">
+              <div class="cd-block__glow"></div>
+              <span class="cd-num" id="cdSeconds" data-unit="seg">00</span>
+              <span class="cd-label">Segundos</span>
+            </div>
+          </div>
+
+          <p class="countdown__note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+            <span><strong>Data estimada:</strong> março de 2027. Não é uma data real — dependendo do andamento do desenvolvimento, o beta pode abrir antes.</span>
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= MARQUEE ================= -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        <span>Brooklyn Roleplay</span>
+        <em>✦</em>
+        <span>Em desenvolvimento</span>
+        <em>✦</em>
+        <span>Beta em 2027</span>
+        <em>✦</em>
+        <span>Entre no Discord</span>
+        <em>✦</em>
+        <span>Brooklyn Roleplay</span>
+        <em>✦</em>
+        <span>Em desenvolvimento</span>
+        <em>✦</em>
+        <span>Beta em 2027</span>
+        <em>✦</em>
+        <span>Entre no Discord</span>
+        <em>✦</em>
+      </div>
+    </div>
+
+    <!-- ================= SOBRE ================= -->
+    <section class="section" id="sobre">
+      <div class="container">
+        <div class="about">
+
+          <div class="about__left">
+            <h2 class="about__title">
+              <span class="line"><span data-reveal="mask">Uma cidade</span></span>
+              <span class="line"><span data-reveal="mask" data-delay="1">feita para jogar.</span></span>
+            </h2>
+          </div>
+
+          <div class="about__right">
+            <p class="about__lead" data-reveal="up">
+              Brooklyn Roleplay está sendo construído com um objetivo claro:
+              ser o melhor servidor de RP brasileiro de MTA.
+            </p>
+
+            <p class="about__text" data-reveal="up" data-delay="1">
+              Economia que faz sentido, empregos com progressão real, facções que
+              disputam território e um sistema policial completo. Cada detalhe
+              pensado para a sua história render.
+            </p>
+
+            <p class="about__text" data-reveal="up" data-delay="2">
+              Ainda estamos nos bastidores. Mas quando a cidade abrir,
+              você vai querer estar lá.
+            </p>
+
+            <a href="https://discord.gg/pQAfHmccxx" target="_blank" rel="noopener" class="link-arrow" data-reveal="up" data-delay="3">
+              <span>Acompanhar o desenvolvimento</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= RECURSOS ================= -->
+    <section class="section" id="recursos">
+      <div class="container">
+
+        <header class="section__head">
+          <h2 class="section__title">
+            <span class="line"><span data-reveal="mask">O que você vai</span></span>
+            <span class="line"><span data-reveal="mask" data-delay="1">encontrar aqui</span></span>
+          </h2>
+        </header>
+
+        <div class="features">
+
+          <article class="feature" data-reveal="up">
+            <span class="feature__num">01</span>
+            <h3 class="feature__title">Economia real</h3>
+            <p class="feature__text">
+              Mercado com oferta e demanda, empresas administradas por jogadores,
+              banco e impostos que movimentam a cidade.
+            </p>
+          </article>
+
+          <article class="feature" data-reveal="up" data-delay="1">
+            <span class="feature__num">02</span>
+            <h3 class="feature__title">Empregos com progressão</h3>
+            <p class="feature__text">
+              De lixeiro a mecânico, de entregador a médico. Cada função tem
+              curva de aprendizado, salário próprio e evolução de carreira.
+            </p>
+          </article>
+
+          <article class="feature" data-reveal="up" data-delay="2">
+            <span class="feature__num">03</span>
+            <h3 class="feature__title">Facções & organizações</h3>
+            <p class="feature__text">
+              Hierarquia, cofres compartilhados, disputa de território e
+              diplomacia entre grupos. Cada decisão pesa.
+            </p>
+          </article>
+
+          <article class="feature" data-reveal="up" data-delay="3">
+            <span class="feature__num">04</span>
+            <h3 class="feature__title">Propriedades & veículos</h3>
+            <p class="feature__text">
+              Casas mobiliadas, garagens, concessionárias, oficinas e um
+              sistema de tuning que dá identidade ao seu personagem.
+            </p>
+          </article>
+
+          <article class="feature" data-reveal="up" data-delay="4">
+            <span class="feature__num">05</span>
+            <h3 class="feature__title">Polícia & justiça</h3>
+            <p class="feature__text">
+              Corporações policiais estruturadas, tribunal, advogados,
+              fiança e um sistema prisional que realmente funciona.
+            </p>
+          </article>
+
+          <article class="feature" data-reveal="up" data-delay="5">
+            <span class="feature__num">06</span>
+            <h3 class="feature__title">Eventos & conteúdo vivo</h3>
+            <p class="feature__text">
+              Corridas, leilões, cassinos, festas e eventos sazonais —
+              a cidade se move todos os dias, não só no lançamento.
+            </p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= DESENVOLVIMENTO ================= -->
+    <section class="section" id="desenvolvimento">
+      <div class="container">
+
+        <header class="section__head">
+          <h2 class="section__title">
+            <span class="line"><span data-reveal="mask">Onde estamos</span></span>
+            <span class="line"><span data-reveal="mask" data-delay="1">agora</span></span>
+          </h2>
+        </header>
+
+        <div class="roadmap" id="roadmap">
+          <div class="roadmap__line" aria-hidden="true"><span class="roadmap__fill"></span></div>
+
+          <article class="milestone">
+            <div class="milestone__marker"></div>
+            <div class="milestone__content">
+              <span class="milestone__status is-done">Concluído</span>
+              <h3 class="milestone__title">Estrutura & scripts base</h3>
+              <p class="milestone__text">
+                Sistema de contas, criação de personagens, salvamento e
+                painéis administrativos internos.
+              </p>
+            </div>
+          </article>
+
+          <article class="milestone">
+            <div class="milestone__marker"></div>
+            <div class="milestone__content">
+              <span class="milestone__status is-progress">Em progresso</span>
+              <h3 class="milestone__title">Economia & empregos</h3>
+              <p class="milestone__text">
+                Mercado dinâmico, propriedades, veículos e o primeiro lote
+                de empregos com progressão.
+              </p>
+            </div>
+          </article>
+
+          <article class="milestone">
+            <div class="milestone__marker"></div>
+            <div class="milestone__content">
+              <span class="milestone__status">Planejado</span>
+              <h3 class="milestone__title">Facções & organizações</h3>
+              <p class="milestone__text">
+                Territórios, hierarquias, cofres e sistema de guerra entre grupos.
+              </p>
+            </div>
+          </article>
+
+          <article class="milestone">
+            <div class="milestone__marker"></div>
+            <div class="milestone__content">
+              <span class="milestone__status">Planejado</span>
+              <h3 class="milestone__title">Beta fechado</h3>
+              <p class="milestone__text">
+                Testes internos com a comunidade do Discord antes do lançamento oficial.
+              </p>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= APOIAR / PIX ================= -->
+    <section class="section" id="apoiar">
+      <div class="container">
+        <div class="support">
+
+          <div class="support__left">
+            <h2 class="support__title">
+              <span class="line"><span data-reveal="mask">Apoie o</span></span>
+              <span class="line"><span data-reveal="mask" data-delay="1"><em>projeto.</em></span></span>
+            </h2>
+
+            <p class="support__lead" data-reveal="up">
+              Todo detalhe aqui exige tempo, dedicação e hospedagem.
+              Qualquer valor ajuda a manter tudo rodando.
+            </p>
+
+            <p class="support__text" data-reveal="up" data-delay="1">
+              Se você acredita no projeto e quer ver a cidade nascer,
+              <strong>qualquer valor</strong> via Pix ajuda a manter o host
+              rodando e o desenvolvimento ativo.
+            </p>
+
+            <p class="support__text" data-reveal="up" data-delay="2">
+              <strong>Não é compra de VIP, não é pay-to-win.</strong>
+              É apoio voluntário a um projeto independente, feito por quem joga.
+            </p>
+
+            <div class="perks" data-reveal="up" data-delay="3">
+
+              <div class="perk">
+                <div class="perk__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z"/><path d="M7 7h.01"/></svg>
+                </div>
+                <div class="perk__text">
+                  <strong>Tag exclusiva no Discord</strong>
+                  <span>Destaque na comunidade</span>
+                </div>
+              </div>
+
+              <div class="perk">
+                <div class="perk__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7Z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z"/></svg>
+                </div>
+                <div class="perk__text">
+                  <strong>Surpresa no beta</strong>
+                  <span>Vantagem inicial no RP</span>
+                </div>
+              </div>
+
+              <div class="perk">
+                <div class="perk__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </div>
+                <div class="perk__text">
+                  <strong>Apoio direto</strong>
+                  <span>Vai para hospedagem e dev</span>
+                </div>
+              </div>
+
+              <div class="perk">
+                <div class="perk__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                </div>
+                <div class="perk__text">
+                  <strong>Jogo justo</strong>
+                  <span>Sem pay-to-win. RP igual</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <aside class="pix-card" data-reveal="up" data-delay="1">
+            <div class="pix-card__head">
+              <div class="pix-card__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 2 2 12l10 10 10-10L12 2z"/>
+                  <path d="m8 12 4 4 4-4"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="pix-card__title">Pix</h3>
+                <span class="pix-card__sub">Apoio instantâneo</span>
+              </div>
+            </div>
+
+            <span class="pix-card__label">Chave Pix (CPF)</span>
+
+            <div class="pix-card__key">
+              <code id="pixKey">56347592851</code>
+              <button class="pix-card__copy" data-copy="56347592851" data-toast="Chave Pix copiada!" aria-label="Copiar chave Pix">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="9" y="9" width="12" height="12" rx="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="pix-card__info">
+              <div class="pix-card__info-row">
+                <span>Favorecido</span>
+                <span>Brooklyn Roleplay</span>
+              </div>
+              <div class="pix-card__info-row">
+                <span>Tipo</span>
+                <span>CPF</span>
+              </div>
+              <div class="pix-card__info-row">
+                <span>Finalidade</span>
+                <span>Apoio ao projeto</span>
+              </div>
+            </div>
+
+            <p class="pix-card__note">
+              <strong>Importante:</strong> após enviar, manda o comprovante
+              no nosso Discord pra você receber a tag de apoiador e garantir
+              a surpresa do beta.
+            </p>
+          </aside>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= CONFIANÇA / LEIS ================= -->
+    <section class="trust" aria-label="Segurança e confiança">
+      <div class="container">
+
+        <div class="trust__head">
+          <h2 class="trust__title">Jogue com tranquilidade</h2>
+          <p class="trust__sub">
+            Brooklyn Roleplay é um projeto sério, feito por pessoas reais.
+            Levamos a segurança, a privacidade e os direitos dos jogadores a sério.
+          </p>
+        </div>
+
+        <div class="trust__grid">
+
+          <div class="trust__item">
+            <div class="trust__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div class="trust__text">
+              <strong>Dados protegidos</strong>
+              <span>Em conformidade com a LGPD</span>
+            </div>
+          </div>
+
+          <div class="trust__item">
+            <div class="trust__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="trust__text">
+              <strong>Conexão segura</strong>
+              <span>Site protegido com HTTPS</span>
+            </div>
+          </div>
+
+          <div class="trust__item">
+            <div class="trust__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6"/><path d="M9 11h3"/></svg>
+            </div>
+            <div class="trust__text">
+              <strong>Termos claros</strong>
+              <span>Regras justas e transparentes</span>
+            </div>
+          </div>
+
+          <div class="trust__item">
+            <div class="trust__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+            </div>
+            <div class="trust__text">
+              <strong>Classificação 18+</strong>
+              <span>Conteúdo adulto supervisionado</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="trust__links">
+          <a href="#">Termos de Uso</a>
+          <span class="divider" aria-hidden="true"></span>
+          <a href="#">Política de Privacidade</a>
+          <span class="divider" aria-hidden="true"></span>
+          <a href="#">Regras do Servidor</a>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= COMUNIDADE / CTA ================= -->
+    <section class="section section--cta" id="comunidade">
+      <div class="container">
+        <div class="cta">
+          <h2 class="cta__title">
+            <span class="line"><span data-reveal="mask">Acompanhe.</span></span>
+            <span class="line cta__title-alt"><span data-reveal="mask" data-delay="1">Entre no Discord.</span></span>
+          </h2>
+
+          <p class="cta__text" data-reveal="up" data-delay="2">
+            É onde tudo acontece primeiro: updates, bastidores do desenvolvimento,
+            testes fechados e a comunidade que vai jogar quando a cidade abrir.
+          </p>
+
+          <a href="https://discord.gg/pQAfHmccxx" target="_blank" rel="noopener" class="btn btn--primary btn--lg" data-reveal="up" data-delay="3">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 13.4 13.4 0 0 0-.587 1.203 18.257 18.257 0 0 0-5.487 0 12.4 12.4 0 0 0-.595-1.203.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+            Entrar no Discord
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="footer">
+    <div class="container">
+
+      <div class="footer__top">
+        <div class="footer__brand">
+          <img src="main/files/images/logo.png" alt="" />
+          <div class="footer__brand-text">
+            <strong>Brooklyn Roleplay</strong>
+            <span>Em desenvolvimento · 2027</span>
+          </div>
+        </div>
+
+        <a href="https://discord.gg/pQAfHmccxx" target="_blank" rel="noopener" class="footer__link">
+          <span>Discord</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+        </a>
+      </div>
+
+      <div class="footer__bottom">
+        <span>© 2027 Brooklyn Roleplay. Todos os direitos reservados.</span>
+        <span class="age-inline">
+          <b>18+</b>
+          Conteúdo destinado a maiores de idade
+        </span>
+        <span>Não afiliado à Rockstar Games ou Take-Two Interactive.</span>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Botão voltar ao topo -->
+  <button class="to-top" id="toTop" aria-label="Voltar ao topo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>
+  </button>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* =====================================================================
+         CONFIG
+         ===================================================================== */
+      const SUPABASE_URL      = 'https://ielrhijnaipsokrbfayj.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_LCQck1hzj1LpZKfkygOxFQ_1rcuM0TB';
+
+      const ADMIN_IDS = ['869719442567864350'];
+      const STAFF_IDS = [];
+
+      const $  = (s, c = document) => c.querySelector(s);
+      const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
+
+      /* TOAST */
+      const toastEl = $('#toast');
+      let toastTimer = null;
+
+      const showToast = (msg) => {
+        if (!toastEl) return;
+        toastEl.textContent = msg;
+        toastEl.classList.add('is-visible');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toastEl.classList.remove('is-visible');
+        }, 2400);
+      };
+
+      /* COPIAR */
+      document.addEventListener('click', async (e) => {
+        const trigger = e.target.closest('[data-copy]');
+        if (!trigger) return;
+
+        const value = trigger.getAttribute('data-copy');
+        if (!value) return;
+
+        const message = trigger.getAttribute('data-toast') || 'Copiado!';
+
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(value);
+          } else {
+            const temp = document.createElement('textarea');
+            temp.value = value;
+            temp.setAttribute('readonly', '');
+            temp.style.position = 'absolute';
+            temp.style.left = '-9999px';
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+          }
+          showToast(message);
+        } catch (err) {
+          console.error(err);
+          showToast('Não foi possível copiar.');
+        }
+      });
+
+      /* HEADER */
+      const header = $('#header');
+      const onScrollHeader = () => {
+        if (!header) return;
+        header.classList.toggle('is-scrolled', window.scrollY > 12);
+      };
+      window.addEventListener('scroll', onScrollHeader, { passive: true });
+      onScrollHeader();
+
+      /* MENU MOBILE */
+      const burger = $('#burger');
+      const navMenu = $('#navMenu');
+
+      const closeMenu = () => {
+        if (!burger || !navMenu) return;
+        burger.classList.remove('is-open');
+        burger.setAttribute('aria-expanded', 'false');
+        navMenu.classList.remove('is-open');
+      };
+
+      if (burger && navMenu) {
+        burger.addEventListener('click', () => {
+          const open = burger.classList.toggle('is-open');
+          burger.setAttribute('aria-expanded', String(open));
+          navMenu.classList.toggle('is-open', open);
+        });
+
+        $$('.nav__link', navMenu).forEach(l => l.addEventListener('click', closeMenu));
+
+        document.addEventListener('click', (e) => {
+          if (!navMenu.classList.contains('is-open')) return;
+          if (navMenu.contains(e.target) || burger.contains(e.target)) return;
+          closeMenu();
+        });
+
+        window.addEventListener('resize', () => {
+          if (window.innerWidth > 860) closeMenu();
+        });
+      }
+
+      /* REVEAL */
+      if ('IntersectionObserver' in window) {
+        const upEls = $$('[data-reveal="up"]');
+        const upObs = new IntersectionObserver((entries, o) => {
+          entries.forEach(e => {
+            if (e.isIntersecting) {
+              e.target.classList.add('is-visible');
+              o.unobserve(e.target);
+            }
+          });
+        }, {
+          threshold: 0.12,
+          rootMargin: '0px 0px -50px 0px'
+        });
+        upEls.forEach(el => upObs.observe(el));
+
+        const maskEls = $$('[data-reveal="mask"]');
+        const maskParents = new Set();
+        maskEls.forEach(el => {
+          const parent = el.parentElement;
+          if (parent) maskParents.add(parent);
+        });
+
+        const maskObs = new IntersectionObserver((entries, o) => {
+          entries.forEach(e => {
+            if (e.isIntersecting) {
+              e.target.querySelectorAll('[data-reveal="mask"]').forEach(child => {
+                child.classList.add('is-visible');
+              });
+              o.unobserve(e.target);
+            }
+          });
+        }, {
+          threshold: 0,
+          rootMargin: '0px 0px -50px 0px'
+        });
+        maskParents.forEach(p => maskObs.observe(p));
+
+        setTimeout(() => {
+          maskEls.forEach(el => {
+            if (!el.classList.contains('is-visible')) {
+              const rect = el.getBoundingClientRect();
+              if (rect.top < window.innerHeight && rect.bottom > 0) {
+                el.classList.add('is-visible');
+              }
+            }
+          });
+        }, 1200);
+      } else {
+        $$('[data-reveal]').forEach(el => el.classList.add('is-visible'));
+      }
+
+      /* NAV LINK ATIVO */
+      const sections = $$('main section[id]');
+      const navLinks = $$('.nav__link');
+
+      const updateActive = () => {
+        const pos = window.scrollY + 140;
+        let current = 'inicio';
+
+        sections.forEach(s => {
+          if (pos >= s.offsetTop) current = s.id;
+        });
+
+        navLinks.forEach(l => {
+          const href = l.getAttribute('href');
+          l.classList.toggle('is-active', href === `#${current}`);
+        });
+      };
+
+      if (sections.length && navLinks.length) {
+        window.addEventListener('scroll', updateActive, { passive: true });
+        updateActive();
+      }
+
+      /* ROADMAP */
+      const roadmap = $('#roadmap');
+      const roadmapFill = roadmap ? roadmap.querySelector('.roadmap__fill') : null;
+      const milestones = $$('.milestone');
+
+      const updateRoadmap = () => {
+        if (!roadmap || !roadmapFill) return;
+        const rect = roadmap.getBoundingClientRect();
+        const vh = window.innerHeight;
+        const start = vh * 0.8;
+        const end = vh * 0.2;
+        const total = rect.height + (start - end);
+        const passed = Math.min(Math.max(start - rect.top, 0), total);
+        const progress = Math.min(passed / total, 1);
+        roadmapFill.style.height = (progress * 100) + '%';
+      };
+
+      if (roadmap && roadmapFill) {
+        window.addEventListener('scroll', updateRoadmap, { passive: true });
+        window.addEventListener('resize', updateRoadmap);
+        updateRoadmap();
+      }
+
+      if ('IntersectionObserver' in window) {
+        const milestoneObs = new IntersectionObserver((entries, o) => {
+          entries.forEach(e => {
+            if (e.isIntersecting) {
+              e.target.classList.add('is-inview');
+              o.unobserve(e.target);
+            }
+          });
+        }, { threshold: 0.4 });
+
+        milestones.forEach(m => milestoneObs.observe(m));
+      } else {
+        milestones.forEach(m => m.classList.add('is-inview'));
+      }
+
+      /* CONTAGEM REGRESSIVA — 1º março 2027 */
+      const countdownEl = $('#countdownGrid');
+      let countdownInterval = null;
+
+      if (countdownEl) {
+        const target = new Date('2027-03-01T00:00:00').getTime();
+
+        const elDays = $('#cdDays');
+        const elHours = $('#cdHours');
+        const elMinutes = $('#cdMinutes');
+        const elSeconds = $('#cdSeconds');
+
+        const lastValues = { d: null, h: null, m: null, s: null };
+
+        const pad = (n, size = 2) => String(n).padStart(size, '0');
+
+        const setValue = (el, value, key) => {
+          if (!el) return;
+          if (lastValues[key] === value) return;
+          lastValues[key] = value;
+          el.textContent = value;
+          el.classList.remove('is-ticking');
+          void el.offsetWidth;
+          el.classList.add('is-ticking');
+        };
+
+        const tick = () => {
+          const now = Date.now();
+          const diff = target - now;
+
+          if (diff <= 0) {
+            setValue(elDays, '000', 'd');
+            setValue(elHours, '00', 'h');
+            setValue(elMinutes, '00', 'm');
+            setValue(elSeconds, '00', 's');
+            if (countdownInterval) clearInterval(countdownInterval);
+            return;
+          }
+
+          const days = Math.floor(diff / 86400000);
+          const hours = Math.floor((diff % 86400000) / 3600000);
+          const minutes = Math.floor((diff % 3600000) / 60000);
+          const seconds = Math.floor((diff % 60000) / 1000);
+
+          setValue(elDays, pad(days, 3), 'd');
+          setValue(elHours, pad(hours), 'h');
+          setValue(elMinutes, pad(minutes), 'm');
+          setValue(elSeconds, pad(seconds), 's');
+        };
+
+        tick();
+        countdownInterval = setInterval(tick, 1000);
+      }
+
+      /* VOLTAR AO TOPO */
+      const toTop = $('#toTop');
+
+      if (toTop) {
+        const toggleToTop = () => {
+          toTop.classList.toggle('is-visible', window.scrollY > 600);
+        };
+        window.addEventListener('scroll', toggleToTop, { passive: true });
+        toggleToTop();
+
+        toTop.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+
+      /* SMOOTH SCROLL */
+      $$('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', (e) => {
+          const href = a.getAttribute('href');
+          if (!href || href === '#' || href.length < 2) return;
+
+          const target = document.querySelector(href);
+          if (!target) return;
+
+          e.preventDefault();
+
+          const offset = (header?.offsetHeight || 76) + 12;
+          const top = target.getBoundingClientRect().top + window.scrollY - offset;
+
+          window.scrollTo({ top, behavior: 'smooth' });
+
+          if (history.replaceState) history.replaceState(null, '', href);
+        });
+      });
+
+      /* =====================================================================
+         AUTENTICAÇÃO — mostra Login OU user chip
+         ===================================================================== */
+      const authSlot = $('#authSlot');
+
+      function getDiscordId(u) {
+        if (!u) return null;
+        const meta = u.user_metadata || {};
+        if (meta.provider_id) return String(meta.provider_id);
+        if (meta.sub) return String(meta.sub);
+        for (const ident of u.identities || []) {
+          if (ident.provider === 'discord' && ident.id) return String(ident.id);
+        }
+        return null;
+      }
+
+      function resolveRole(u, p) {
+        const id = getDiscordId(u);
+        if (id && ADMIN_IDS.includes(id)) return 'admin';
+        if (id && STAFF_IDS.includes(id)) return 'staff';
+        if (p && typeof p.role === 'string') {
+          const r = p.role.toLowerCase();
+          if (r === 'admin' || r === 'staff') return r;
+        }
+        return 'user';
+      }
+
+      function fallbackAvatar(name) {
+        const initial = (name || '?').trim().charAt(0).toUpperCase();
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'>
+          <rect width='40' height='40' fill='%2316161c'/>
+          <text x='20' y='26' font-size='18' fill='%23ffd500' text-anchor='middle'
+                font-family='Anton,sans-serif'>${initial}</text>
+        </svg>`;
+        return 'data:image/svg+xml;utf8,' + svg;
+      }
+
+      function renderLoginButton() {
+        if (!authSlot) return;
+        authSlot.innerHTML = `
+          <a href="login.html" class="btn btn--outline btn--sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg>
+            <span>Login</span>
+          </a>
+        `;
+      }
+
+      function renderUserChip(user, role) {
+        if (!authSlot) return;
+
+        const name = user.name || 'Jogador';
+        const avatar = user.avatar || fallbackAvatar(name);
+        const roleLabel = role === 'admin' ? 'ADMIN' : role === 'staff' ? 'STAFF' : 'JOGADOR';
+        const roleClass = role === 'admin' ? 'is-admin' : role === 'staff' ? 'is-staff' : '';
+
+        authSlot.innerHTML = `
+          <a href="dashboard.html" class="user-chip" title="Ir para o painel">
+            <span class="user-chip__avatar-wrap">
+              <img class="user-chip__avatar" src="${avatar}" alt="" />
+              <span class="user-chip__status-dot"></span>
+            </span>
+            <span class="user-chip__info">
+              <span class="user-chip__name">${name.replace(/</g, '&lt;')}</span>
+              <span class="user-chip__role ${roleClass}">${roleLabel}</span>
+            </span>
+          </a>
+        `;
+      }
+
+      async function initAuth() {
+        if (!authSlot) return;
+
+        // Se não tiver SDK, mostra login
+        if (!window.supabase) {
+          renderLoginButton();
+          return;
+        }
+
+        try {
+          const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+          const { data: { session } } = await client.auth.getSession();
+
+          if (!session || !session.user) {
+            renderLoginButton();
+            return;
+          }
+
+          // Tem sessão → pega perfil pra resolver role
+          const u = session.user;
+          const meta = u.user_metadata || {};
+          const name = meta.full_name || meta.name || meta.user_name
+            || (u.email || '').split('@')[0] || 'Jogador';
+          const avatar = meta.avatar_url || meta.picture || fallbackAvatar(name);
+
+          let profile = null;
+          try {
+            const { data } = await client
+              .from('profiles').select('*').eq('id', u.id).maybeSingle();
+            profile = data;
+          } catch (_) {}
+
+          const role = resolveRole(u, profile);
+          const finalName = profile?.username || name;
+          const finalAvatar = profile?.avatar_url || avatar;
+
+          renderUserChip({ name: finalName, avatar: finalAvatar }, role);
+
+        } catch (err) {
+          console.warn('[Auth]', err);
+          renderLoginButton();
+        }
+      }
+
+      /* ---------------------------------------------------
+         LOG
+      --------------------------------------------------- */
+      console.log(
+        '%cBrooklyn Roleplay',
+        'color:#ffd500;font-size:20px;font-weight:bold;letter-spacing:3px;font-family:Anton,sans-serif;'
+      );
+      console.log(
+        '%cEm desenvolvimento · 2027',
+        'color:#9b9ba6;font-size:12px;font-family:monospace;'
+      );
+
+      /* Start */
+      initAuth();
+    })();
+  </script>
+</body>
+</html>
